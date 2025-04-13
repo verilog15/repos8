@@ -1,0 +1,341 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+.site-list-box>div:first-child>*:not(.MuiIconButton-root) {
+  display: none;
+}
+.site-list-box.batch-edit>div:first-child>*:not(.MuiIconButton-root) {
+  display: inline-flex;
+}
+.site-list-box .site-icon>span {
+  display: none;
+  float: left;
+  position: absolute;
+  z-index: 1;
+}
+.site-list-box .site-icon>span>svg {
+  background: white;
+}
+.jse-theme-dark>.jse-main div.jse-menu {
+  background: black;
+  border-bottom: 1px solid #747474;
+}
+.site-list-box.batch-edit .site-icon>span {
+  display: inline-flex;
+}
+.donate {
+  max-width: 350px;
+  box-shadow: rgb(0 0 0 / 10%) 0px 0px 15px;
+  transition: all 0.5s ease;
+  filter: grayscale(1);
+  opacity: .1;
+}
+.donate:hover {
+  max-width: 100%;
+  box-shadow: rgb(0 0 0 / 60%) 0px 0px 15px;
+  filter: none;
+  opacity: 1;
+}
+.donateLinks {
+  box-shadow: rgb(0 0 0 / 10%) 3px 3px 15px;
+  transition: box-shadow 0.3s ease;
+}
+.donateLinks:hover {
+  box-shadow: rgb(0 0 0 / 60%) 3px 3px 15px;
+}
+@media screen and (max-width: 600px) {
+  #root>.MuiBox-root {
+    margin-left: 0px;
+  }
+  #tabs>li:last-child {
+    display: none;
+  }
+  #root>.MuiBox-root>.MuiList-root {
+    height: 64px;
+    z-index: 9;
+    width: 100%;
+    max-width: unset;
+    overflow: hidden;
+  }
+  #root>.MuiBox-root>[role="tabpanel"] {
+    margin-top: 88px;
+  }
+  #root>.MuiBox-root>.MuiList-root:not(.hide):hover {
+    height: unset;
+  }
+  #root>.MuiBox-root>.MuiList-root:not(.hide):hover~div {
+    margin-top: 295px;
+  }
+  #root>.MuiBox-root>.MuiList-root:not(.hide):hover a {
+    pointer-events: none;
+  }
+  #root>.MuiBox-root>.MuiList-root:not(.hide):hover>li:last-child {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+  }
+  .donate {
+    max-width: 100%;
+  }
+}
+.selectTxt>i,span.selectTxt {
+  background: #f3533a!important;
+}
+.selectImg>i,span.selectImg {
+  background: #fa9f42!important;
+}
+.selectLink>i,span.selectLink {
+  background: #8ad879!important;
+}
+.selectPage>i,span.selectPage {
+  background: #5acfc9!important;
+}
+
+.selectTxt .site-icon:nth-child(-n+6) {
+  background: #f3533a10!important;
+}
+.selectImg .site-icon:nth-child(-n+6) {
+  background: #fa9f4210!important;
+}
+.selectLink .site-icon:nth-child(-n+6) {
+  background: #8ad87910!important;
+}
+.selectPage .site-icon:nth-child(-n+6) {
+  background: #5acfc910!important;
+}
+
+.hideIcon>i,.hideIcon>div {
+  opacity: 0.3;
+}
+.sponsors {
+  opacity: 0.1;
+  margin-top: 20px;
+  colorScheme: auto;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+.sponsors:hover {
+  opacity: 1;
+}
+
+span.selectTxt,
+span.selectImg,
+span.selectLink,
+span.selectPage {
+  color: white;
+  margin: 10px;
+  padding: 3px 10px;
+  border-radius: 5px;
+  font-size: large;
+  user-select: none;
+  cursor: pointer;
+  box-shadow: 0px 3px 5px -1px rgb(0 0 0 / 20%), 0px 5px 8px 0px rgb(0 0 0 / 14%), 0px 1px 5px 0px rgb(0 0 0 / 12%);
+  display: inline-block;
+  transition: transform 0.1s ease;
+}
+span.selectTxt:hover,
+span.selectImg:hover,
+span.selectLink:hover,
+span.selectPage:hover {
+  transform: scale(1.1);
+}
+.selectTxt.selectImg>i {
+  background: linear-gradient(45deg, #f3533a 0%, #f3533a 50%, #fa9f42 50%, #fa9f42 100%)!important;
+}
+.selectTxt.selectLink>i {
+  background: linear-gradient(45deg, #f3533a 0%, #f3533a 50%, #8ad879 50%, #8ad879 100%)!important;
+}
+.selectTxt.selectPage>i {
+  background: linear-gradient(45deg, #f3533a 0%, #f3533a 50%, #5acfc9 50%, #5acfc9 100%)!important;
+}
+.selectLink.selectImg>i {
+  background: linear-gradient(45deg, #8ad879 0%, #8ad879 50%, #fa9f42 50%, #fa9f42 100%)!important;
+}
+.selectPage.selectImg>i {
+  background: linear-gradient(45deg, #5acfc9 0%, #5acfc9 50%, #fa9f42 50%, #fa9f42 100%)!important;
+}
+.selectPage.selectLink>i {
+  background: linear-gradient(45deg, #5acfc9 0%, #5acfc9 50%, #8ad879 50%, #8ad879 100%)!important;
+}
+
+.selectTxt.selectImg.selectLink>i {
+  background: linear-gradient(45deg, #f3533a 0%, #f3533a 33%, #fa9f42 33%, #fa9f42 66%, #8ad879 66%, #8ad879 100%)!important;
+}
+.selectTxt.selectImg.selectPage>i {
+  background: linear-gradient(45deg, #f3533a 0%, #f3533a 33%, #fa9f42 33%, #fa9f42 66%, #5acfc9 66%, #5acfc9 100%)!important;
+}
+.selectPage.selectImg.selectLink>i {
+  background: linear-gradient(45deg, #5acfc9 0%, #5acfc9 33%, #fa9f42 33%, #fa9f42 66%, #8ad879 66%, #8ad879 100%)!important;
+}
+
+.selectTxt.selectImg.selectLink.selectPage>i {
+  background: linear-gradient(45deg, #f3533a 0%, #f3533a 25%, #fa9f42 25%, #fa9f42 50%, #8ad879 50%, #8ad879 75%, #5acfc9 75%, #5acfc9 100%)!important;
+}
+.unfold .MuiTabs-indicator,
+.unfold .MuiTabs-scrollButtons {
+  display: none;
+}
+.unfold .MuiTabs-flexContainer {
+  flex-wrap: wrap;
+}
+.unfold .Mui-selected {
+  background: aliceblue;
+}
+input.filterEngine {
+  width: 135px;
+  height: 37.5px;
+  margin: 2px 10px;
+  border: none;
+  font-family: "Roboto","Helvetica","Arial",sans-serif;
+  font-weight: 500;
+  font-size: 0.875rem;
+  padding: 6px 16px;
+  box-sizing: border-box;
+  line-height: 1.75;
+  letter-spacing: 0.02857em;
+  border-radius: 4px;
+  box-shadow: 0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12);
+  transition: width 0.3s ease, background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,border-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+}
+input.filterEngine:hover {
+  box-shadow: 0px 2px 4px -1px rgba(0,0,0,0.2), 0px 4px 5px 0px rgba(0,0,0,0.14), 0px 1px 10px 0px rgba(0,0,0,0.12);
+}
+input.filterEngine:focus,
+input.filterEngine:focus-visible {
+  border: none;
+  outline: none;
+  width: 90%;
+  box-shadow: 0px 3px 5px -1px rgb(0 0 0 / 20%), 0px 5px 8px 0px rgb(0 0 0 / 14%), 0px 1px 5px 0px rgb(0 0 0 / 12%);
+}
+input.filterEngine:focus~button,
+input.filterEngine:focus-visible~button {
+  display: none;
+}
+input.filterEngine+svg {
+  position: absolute;
+  margin-left: -35px;
+  color: #757575;
+  font-size: 20px;
+  height: 43px;
+}
+#root .site-icon.filter {
+  background: aliceblue!important;
+}
+#dragTargetLine {
+  height: 80px;
+  width: 2px;
+  background: #c0def9;
+  position: absolute;
+  display: none;
+  pointer-events: none;
+}
+#dragTargetLine::after {
+  content: "";
+  width: 0;
+  height: 0;
+  display: block;
+  margin-left: -7px;
+  border-width: 8px;
+  border-style: solid;
+  border-color: #f3533a transparent transparent transparent;
+}
+#verifyResultList {
+  width: 100%;
+  display: table;
+  border-collapse: collapse;
+  border-spacing: 0;
+  table-layout: fixed;
+  white-space: nowrap;
+}
+#verifyBtn {
+  width: 36px;
+  height: 38px;
+  overflow: hidden;
+  min-width: 35px;
+  opacity: 0.8;
+  justify-content: flex-end;
+  background-color: #a9a9a9;
+  transition: all 0.3s ease;
+  margin-top: -2px;
+}
+#verifyBtn:hover {
+  opacity: 1;
+  background-color: #1976d2;
+}
+#verifyResultList > tr > td {
+  max-width: 100%;
+  font-family: "Roboto","Helvetica","Arial",sans-serif;
+  font-weight: 400;
+  font-size: 0.875rem;
+  line-height: 1.43;
+  letter-spacing: 0.01071em;
+  display: table-cell;
+  vertical-align: inherit;
+  border-bottom: 1px solid rgba(224, 224, 224, 1);
+  text-align: left;
+  padding: 16px;
+  color: rgba(0, 0, 0, 0.87);
+  word-wrap: break-word;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#verifyResultList > tr > td:nth-child(1),
+#verifyResultList > tr > td:nth-child(3) {
+  width: 10%;
+}
+#verifyResultList input[type="checkbox"] {
+  float: right;
+  display: none;
+}
+#verifyResultList.finished input[type="checkbox"] {
+  display: block;
+}
+#verifyPanel {
+  display: none;
+}
+#verifyResultList.finished .okItem {
+  display: none;
+}
+#verifyDelBtn {
+  display: none;
+}
+#verifyDelBtn.finished {
+  display: inline;
+}
+.MuiButtonBase-root.freeWebdav {
+  background-color: darkorange;
+  color: white;
+  transform: scale(1.1);
+}
+.MuiButtonBase-root.freeWebdav:hover {
+  background-color: #ff5722;
+  color: white;
+  transform: scale(1.2);
+}
+.keyboardBtn > .MuiFormControlLabel-label {
+  font-family: Arial;
+  font-weight: bold;
+  border-radius: 8px;
+  background-color: #efefef;
+  border: 1px outset #c9c9c9;
+  font-size: 9pt;
+  color: #505050;
+  padding: 3px 4px;
+  min-width: 50px;
+  min-height: 12px;
+  display: inline-block;
+  text-align: center;
+  box-shadow: 1px 1px 3px #6e6e6e, inset -2px -2px 3px #e3e3e3, inset 2px 2px 3px #c9c9c9;
+}
