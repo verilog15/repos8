@@ -1,0 +1,239 @@
+[package]
+name = "kalosm"
+edition = "2021"
+version = "0.4.0"
+authors = ["Evan Almloff <evanalmloff@gmail.com>"]
+description = "A simple interface for pretrained AI models "
+keywords = ["llm", "llama", "whisper", "ocr", "nlp"]
+license = "MIT/Apache-2.0"
+repository = "https://github.com/floneum/floneum"
+
+[dependencies]
+comfy-table = { version = "7.1.0", optional = true }
+futures-util = "0.3.28"
+hdrhistogram = { version = "7.5.4", optional = true }
+thiserror = { workspace = true, optional = true }
+rand = { version = "0.8.5", optional = true }
+arroy = { version = "0.5.0", optional = true }
+
+[dependencies.kalosm-model-types]
+version = "0.4.0"
+path = "../kalosm-model-types"
+optional = true
+features = []
+
+[dependencies.kalosm-common]
+version = "0.4.0"
+path = "../kalosm-common"
+optional = true
+features = []
+
+[dependencies.kalosm-language]
+features = []
+optional = true
+workspace = true
+
+[dependencies.kalosm-sound]
+features = []
+optional = true
+workspace = true
+
+[dependencies.kalosm-streams]
+features = []
+workspace = true
+
+[dependencies.kalosm-vision]
+features = []
+optional = true
+workspace = true
+
+[dependencies.serde]
+version = "1.0.163"
+features = ["derive"]
+
+[dependencies.surrealdb]
+version = "2.1.4"
+optional = true
+
+[dependencies.heed]
+version = "0.20.5"
+optional = true
+
+[dependencies.tracing]
+version = "0.1.40"
+optional = true
+
+[dev-dependencies]
+axum = "0.7.2"
+scraper = "0.19.0"
+tracing-subscriber = "0.2"
+surrealdb = { version = "2.1.4", features = ["kv-surrealkv"] }
+anyhow.workspace = true
+image = "0.24.7"
+tokio = { version = "1", features = ["full"] }
+
+[dev-dependencies.kalosm]
+features = [
+    "sound",
+    "language",
+    "vision",
+    "remote",
+    "surrealdb",
+    "prompt_annealing",
+]
+workspace = true
+
+[features]
+default = ["bert", "llama"]
+full = ["language", "vision", "sound", "surrealdb"]
+cuda = [
+    "kalosm-language?/cublas",
+    "kalosm-vision?/cublas",
+    "kalosm-sound?/cuda",
+]
+mkl = ["kalosm-language?/mkl", "kalosm-vision?/mkl", "kalosm-sound?/mkl"]
+language = [
+    "dep:kalosm-language",
+    "dep:hdrhistogram",
+    "dep:kalosm-model-types",
+    "dep:comfy-table",
+]
+bert = ["kalosm-language?/bert", "dep:kalosm-common"]
+llama = ["kalosm-language?/llama", "dep:kalosm-common"]
+prompt_annealing = ["language", "dep:rand", "dep:thiserror", "dep:tracing"]
+metal = [
+    "kalosm-language?/metal",
+    "kalosm-vision?/metal",
+    "kalosm-sound?/metal",
+]
+sound = ["dep:kalosm-sound"]
+surrealdb = ["dep:surrealdb", "dep:heed", "dep:arroy", "dep:thiserror"]
+vision = ["dep:kalosm-vision"]
+openai = ["kalosm-language?/openai"]
+anthropic = ["kalosm-language?/anthropic"]
+remote = ["kalosm-language?/remote"]
+scrape = ["kalosm-language?/scrape"]
+
+[[example]]
+name = "axum"
+required-features = ["language"]
+
+[[example]]
+name = "chat-mistral-2"
+required-features = ["language"]
+
+[[example]]
+name = "phi-3"
+required-features = ["language"]
+
+[[example]]
+name = "chat-tiny-llama"
+required-features = ["language"]
+
+[[example]]
+name = "chat-with-character"
+required-features = ["language"]
+
+[[example]]
+name = "chat"
+required-features = ["language"]
+
+[[example]]
+name = "chunking"
+required-features = ["language"]
+
+[[example]]
+name = "constrained-regex"
+required-features = ["language"]
+
+[[example]]
+name = "constrained-rust-types"
+required-features = ["language"]
+
+[[example]]
+name = "constrained"
+required-features = ["language"]
+
+[[example]]
+name = "crawl"
+required-features = ["language", "scrape"]
+
+[[example]]
+name = "evaluation"
+required-features = ["language"]
+
+[[example]]
+name = "generate-image"
+required-features = ["language"]
+
+[[example]]
+name = "generate-text"
+required-features = ["language"]
+
+[[example]]
+name = "live-qa"
+required-features = ["language", "sound", "surrealdb"]
+
+[[example]]
+name = "llama"
+required-features = ["language"]
+
+[[example]]
+name = "mistral"
+required-features = ["language"]
+
+[[example]]
+name = "mutate"
+required-features = ["language"]
+
+[[example]]
+name = "ocr"
+required-features = ["vision"]
+
+[[example]]
+name = "prompt-annealing"
+required-features = ["language", "prompt_annealing"]
+
+[[example]]
+name = "remote-open-ai-compatable"
+required-features = ["language"]
+
+[[example]]
+name = "claude-3-5-haiku"
+required-features = ["language", "anthropic"]
+
+[[example]]
+name = "gpt-4o-mini"
+required-features = ["language", "openai"]
+
+[[example]]
+name = "resume-chat"
+required-features = ["language"]
+
+[[example]]
+name = "segment-image"
+required-features = ["vision"]
+
+[[example]]
+name = "self-chat"
+required-features = ["language"]
+
+[[example]]
+name = "semantic-search"
+required-features = ["language", "surrealdb"]
+
+[[example]]
+name = "rag"
+required-features = ["language", "surrealdb"]
+
+[[example]]
+name = "task"
+required-features = ["language"]
+
+[[example]]
+name = "transcribe"
+required-features = ["sound"]
+
+[package.metadata.docs.rs]
+# Features to pass to Cargo
+features = ["full", "openai", "anthropic", "scrape"]

@@ -1,0 +1,64 @@
+name: macOS tests
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - interfaces/*/src/**
+      - interfaces/*/examples/**
+      - interfaces/*/Cargo.toml
+      - models/*/src/**
+      - models/*/examples/**
+      - models/*/Cargo.toml
+      - floneum/*/src/**
+      - floneum/*/examples/**
+      - floneum/*/Cargo.toml
+      - fusor-ml/*/src/**
+      - fusor-ml/*/examples/**
+      - fusor-ml/*/Cargo.toml
+      - src/**
+      - .github/**
+      - Cargo.toml
+
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches:
+      - main
+    paths:
+      - interfaces/*/src/**
+      - interfaces/*/examples/**
+      - interfaces/*/Cargo.toml
+      - models/*/src/**
+      - models/*/examples/**
+      - models/*/Cargo.toml
+      - floneum/*/src/**
+      - floneum/*/examples/**
+      - floneum/*/Cargo.toml
+      - fusor-ml/*/src/**
+      - fusor-ml/*/examples/**
+      - fusor-ml/*/Cargo.toml
+      - src/**
+      - .github/**
+      - Cargo.toml
+
+# workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    if: github.event.pull_request.draft == false
+    name: Mac Test Suite
+    runs-on: macos-latest
+    steps:
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/checkout@v4
+      - name: Run tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: cargo test --all --tests --features kalosm/language,kalosm/sound,kalosm/vision,kalosm/remote,kalosm/scrape,kalosm/metal --exclude fusor-ml-core
