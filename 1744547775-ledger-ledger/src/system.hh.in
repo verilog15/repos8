@@ -1,0 +1,201 @@
+/*
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ * - Redistributions of source code must retain the above copyright
+ *   notice, this list of conditions and the following disclaimer.
+ *
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the distribution.
+ *
+ * - Neither the name of New Artisans LLC nor the names of its
+ *   contributors may be used to endorse or promote products derived from
+ *   this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @addtogroup util
+ *
+ * @file   system.hh
+ * @author John Wiegley
+ *
+ * @brief  All system headers needed by Ledger.
+ *
+ * These are collected here so that a pre-compiled header can be made.
+ * None of these header files (with the exception of acconf.h, when
+ * configure is re-run) are expected to change.
+ */
+#pragma once
+
+//#warning("Loading system.hh.  This should occur only once!")
+
+/*------------------------------------------------------------------------*/
+/* Application configuration                                              */
+/*------------------------------------------------------------------------*/
+
+#cmakedefine01 HAVE_GETTEXT
+
+#cmakedefine01 HAVE_EDIT
+#cmakedefine01 HAVE_READLINE
+#cmakedefine01 HAVE_GETPWUID
+#cmakedefine01 HAVE_GETPWNAM
+#cmakedefine01 HAVE_IOCTL
+#cmakedefine01 HAVE_ISATTY
+
+#cmakedefine01 HAVE_UNIX_PIPES
+
+#cmakedefine01 HAVE_BOOST_PYTHON
+#cmakedefine01 HAVE_GPGME
+#cmakedefine01 HAVE_BOOST_REGEX_UNICODE
+#cmakedefine01 HAVE_BOOST_NOWIDE
+
+/*------------------------------------------------------------------------*/
+/* System includes                                                        */
+/*------------------------------------------------------------------------*/
+
+#include "utf8.h"
+
+#include <algorithm>
+#include <exception>
+#include <typeinfo>
+#include <stdexcept>
+#include <iostream>
+#include <streambuf>
+#include <iomanip>
+#include <fstream>
+#include <sstream>
+#include <iterator>
+#include <list>
+#include <map>
+#include <unordered_map>
+#include <memory>
+#include <new>
+#include <set>
+#include <stack>
+#include <string>
+#include <vector>
+
+#include <cassert>
+#include <cctype>
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <csignal>
+#include <cstddef> /* needed for gcc 4.9 */
+
+#if defined(_WIN32) || defined(__CYGWIN__)
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
+
+#if HAVE_GETPWUID || HAVE_GETPWNAM
+#include <pwd.h>
+#endif
+
+#if HAVE_IOCTL
+#include <sys/ioctl.h>
+#endif
+
+#if HAVE_UNIX_PIPES
+#include <sys/types.h>
+#include <sys/wait.h>
+#endif
+
+#if HAVE_GETTEXT
+#include <libintl.h>
+#define _(str) gettext(str)
+#else
+#define _(str) str
+#endif
+#define _f(str) boost::format(_(str))
+
+#include <gmp.h>
+#include <mpfr.h>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/any.hpp>
+#include <boost/bind/bind.hpp>
+#include <boost/cast.hpp>
+#include <boost/current_function.hpp>
+
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/posix_time/posix_time_io.hpp>
+#include <boost/date_time/gregorian/gregorian_io.hpp>
+
+#include <boost/filesystem/exception.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/directory.hpp>
+#include <boost/filesystem/path.hpp>
+
+#include <boost/foreach.hpp>
+#include <boost/format.hpp>
+#include <boost/function.hpp>
+
+#include <boost/intrusive_ptr.hpp>
+
+#include <boost/iostreams/stream.hpp>
+#include <boost/iostreams/write.hpp>
+#define BOOST_IOSTREAMS_USE_DEPRECATED 1
+#include <boost/iostreams/device/file_descriptor.hpp>
+
+#include <boost/iterator/iterator_facade.hpp>
+#include <boost/iterator/transform_iterator.hpp>
+
+#include <boost/lexical_cast.hpp>
+#include <boost/operators.hpp>
+#include <boost/optional.hpp>
+#include <boost/ptr_container/ptr_list.hpp>
+
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
+
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_int.hpp>
+#include <boost/random/uniform_real.hpp>
+#include <boost/random/variate_generator.hpp>
+
+// jww (2012-05-20): This must be included before Boost.Regex
+#include <boost/xpressive/xpressive_static.hpp>
+
+#if HAVE_BOOST_REGEX_UNICODE
+#include <boost/regex/icu.hpp>
+#else
+#include <boost/regex.hpp>
+#endif // HAVE_BOOST_REGEX_UNICODE
+
+#include <boost/tokenizer.hpp>
+
+#include <boost/tuple/tuple.hpp>
+#include <boost/tuple/tuple_comparison.hpp>
+
+#include <boost/variant.hpp>
+#include <boost/version.hpp>
+
+#include <boost/ptr_container/ptr_deque.hpp>
+
+#if HAVE_BOOST_PYTHON
+#include <boost/python.hpp>
+#include <boost/python/detail/wrap_python.hpp>
+#include <boost/python/module_init.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <boost/iterator/indirect_iterator.hpp>
+#endif // HAVE_BOOST_PYTHON
