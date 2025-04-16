@@ -1,0 +1,15 @@
+.idea
+.npmrc
+dist
+**/dist
+node_modules
+**/node_modules
+coverage
+**/coverage
+data
+**/scripts/document.sh
+**/scripts/release.sh
+**/scripts/benchmark.sh
+.husky/_
+lerna-debug.log
+*.sqlite
