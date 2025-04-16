@@ -1,0 +1,87 @@
+name: Test
+
+on:
+  push:
+    branches-ignore:
+      - 'dependabot/**'
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  pre-commit:
+    name: Pre-commit checks (Black, Flake8, MyPy, ...)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+      - uses: pre-commit/action@v3.0.1
+
+  test-dist:
+    name: Test SDist & wheel
+    needs: pre-commit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install CPython 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+          architecture: x64
+      - name: Run tests
+        run: pipx run nox -s test-sdist-3.9 test-wheel-3.9
+
+  test:
+    name: CPython ${{ matrix.python }} ${{ matrix.platform[0] }} on ${{ matrix.platform[1] }}
+    needs: test-dist
+    runs-on: ${{ matrix.platform[1] }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - [ 'x86_64', 'ubuntu-24.04' ]
+        python: [ '3.9', '3.10', '3.11', '3.12', '3.13' ]
+        include:
+          - platform: [ 'aarch64', 'ubuntu-24.04-arm' ]
+            python: '3.12'
+          - platform: [ 'i686', 'ubuntu-24.04' ]
+            python: '3.12'
+          - platform: [ 'armv7l', 'ubuntu-24.04-arm' ]
+            python: '3.12'
+          #- platform: [ 'ppc64le', 'ubuntu-24.04' ]
+          #  python: '3.12'
+          #  qemu: true
+          #- platform: [ 's390x', 'ubuntu-24.04' ]
+          #  python: '3.12'
+          #  qemu: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/auditwheel_tests
+          key: python${{ matrix.python }}-${{ matrix.platform[0] }}-${{ hashFiles('**/test_manylinux.py') }}
+          restore-keys: python${{ matrix.python }}-${{ matrix.platform[0] }}-
+      - name: Install CPython ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: "${{ matrix.python }}"
+          allow-prereleases: true
+      - name: Set up QEMU
+        if: matrix.qemu
+        uses: docker/setup-qemu-action@v3
+      - name: Run tests
+        run: pipx run nox -s tests-${{ matrix.python }}
+        env:
+          AUDITWHEEL_ARCH: ${{ matrix.platform[0] }}
+          AUDITWHEEL_QEMU: ${{ matrix.qemu }}
+      - name: Upload coverage to codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
