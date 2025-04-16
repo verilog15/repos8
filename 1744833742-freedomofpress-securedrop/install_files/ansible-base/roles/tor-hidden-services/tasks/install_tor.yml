@@ -1,0 +1,33 @@
+---
+- name: Remove Tor project GPG signing key.
+  apt_key:
+    state: absent
+    id: A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89
+  tags:
+    - apt
+    - tor
+
+- name: Remove Tor apt repo, so FPF repo is used.
+  file:
+    path: /etc/apt/sources.list.d/tor_apt_freedom_press.list
+    state: absent
+  tags:
+    - apt
+    - tor
+
+# Remove official Tor apt repo key, so only the SecureDrop Release
+# Signing Key is used, for the FPF tor apt mirror
+- name: Install Tor and Tor keyring packages.
+  apt:
+    name: "{{ item.name }}"
+    state: "{{ item.state }}"
+    update_cache: yes
+    cache_valid_time: 3600
+  with_items:
+    - name: tor
+      state: present
+    - name: deb.torproject.org-keyring
+      state: absent
+  tags:
+    - apt
+    - tor

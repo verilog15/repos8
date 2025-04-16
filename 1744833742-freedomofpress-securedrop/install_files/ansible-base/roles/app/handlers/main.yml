@@ -1,0 +1,17 @@
+---
+## Tor section
+- name: restart tor
+  service:
+    name: tor
+    state: restarted
+
+## App/securedrop section
+- name: restart apache2
+  service:
+    name: apache2
+    state: restarted
+
+- name: restart apparmor
+  service:
+    name: apparmor
+    state: restarted

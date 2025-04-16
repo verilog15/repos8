@@ -1,0 +1,10 @@
+{
+    "app": {
+        "enabled": true,
+        "bucket": 1
+    },
+    "mon": {
+        "enabled": false,
+        "bucket": 0
+    }
+}

@@ -1,0 +1,42 @@
+---
+# Ensures that prerequisite packages for ansible and securedrop-admin install
+# are present
+
+- name: Install python and packages required by installer
+  raw: apt-get update && apt-get install -y python3 dnsutils ubuntu-release-upgrader-core mokutil
+  register: _apt_install_prereqs_results
+  changed_when: "'0 upgraded, 0 newly installed, 0 to remove' not in _apt_install_prereqs_results.stdout"
+
+- name: Check SecureBoot status
+  command: mokutil --sb-state
+  changed_when: false
+  failed_when: false # results inspected below
+  register: _mokutil_results
+
+- name: Verify that SecureBoot is not enabled
+  assert:
+    that:
+      - "'SecureBoot enabled' not in _mokutil_results.stdout"
+      - "'SecureBoot enabled' not in _mokutil_results.stderr"
+    fail_msg: >-
+      SecureBoot is enabled. SecureDrop cannot be installed, as it uses a
+      custom kernel that is not signed. Please disable SecureBoot on the
+      target servers and try again.
+
+- name: Remove cloud-init and ufw
+  apt:
+    name:
+      - cloud-init
+      - ufw
+    state: absent
+    purge: yes
+  tags:
+    - apt
+
+- name: Ensure dist-upgrade before SecureDrop install
+  apt:
+    upgrade: dist
+    update_cache: yes
+  tags:
+    - apt
+    - apt-upgrade

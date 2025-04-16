@@ -1,0 +1,51 @@
+---
+- name: Copy SSH client config file.
+  copy:
+    src: ssh_config
+    dest: /etc/ssh/ssh_config
+    owner: root
+    mode: "0644"
+  tags:
+    - ssh
+    - 2fa
+    - permissions
+
+- name: Copy SSH server config file.
+  template:
+    src: sshd_config
+    dest: /etc/ssh/sshd_config
+    owner: root
+    mode: "0644"
+  tags:
+    - ssh
+    - 2fa
+    - permissions
+
+# Removing files from /etc/sshd_config.d/ is a no-op because we don't enable that
+# directory in our custom sshd_config, but let's make it clear that we don't enable
+# PasswordAuthentication
+- name: Remove cloud-init's sshd_config.d
+  file:
+    path: /etc/ssh/sshd_config.d/50-cloud-init.conf
+    state: absent
+  tags:
+    - ssh
+    - permissions
+
+- name: Copy pam common-auth config file.
+  copy:
+    src: common-auth
+    dest: /etc/pam.d/
+    owner: root
+    mode: "0644"
+  tags:
+    - ssh
+    - pam
+    - permissions
+
+- name: Ensure sshd is running.
+  service:
+    name: ssh
+    state: started
+  tags:
+    - ssh

@@ -1,0 +1,16 @@
+---
+dns_server:
+  - 8.8.8.8
+  - 8.8.4.4
+
+app_hostname: app-prod
+app_ip: 10.0.1.4
+
+tor_services:
+  - sshv3
+
+# Postfix should indeed be running on prod hosts, otherwise
+# OSSEC alerts cannot be delivered. It's disabled in staging.
+postfix_enabled: True
+
+fpf_apt_repo_url: "https://apt.freedom.press"

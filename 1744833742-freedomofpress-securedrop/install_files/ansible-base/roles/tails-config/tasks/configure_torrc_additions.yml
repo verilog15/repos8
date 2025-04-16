@@ -1,0 +1,32 @@
+---
+- name: Find V3 Authenticated Onion Service info for SecureDrop interfaces.
+  find:
+    paths:
+      - "{{ tails_config_ansible_base }}"
+    patterns:
+      # Collect all files that end in `.auth_private` - if there are any present
+      # then `torrc` will need a directive added
+      - '*.auth_private'
+  register: find_v3_aths_info_result
+
+# This task validates that at least one suitable Tor service file was found;
+# if not, then the playbooks haven't been run, so fail with instructions.
+- name: Confirm Tor service info was found.
+  assert:
+    that:
+      - find_v3_aths_info_result.matched >= 1
+    msg: >-
+      Failed to find Tor service info locally. Make sure you've installed SecureDrop
+      on the servers, and that the `.auth_private` files are located in:
+      `{{ tails_config_ansible_base }}/`.
+
+- name: Append ClientOnionAuthDir directive to torrc additions
+  become: yes
+  lineinfile:
+    dest: "{{ tails_config_torrc_additions }}"
+    line: "ClientOnionAuthDir /var/lib/tor/onion_auth"
+    owner: root
+    group: root
+    mode: "0400"
+    create: yes
+  when: find_v3_aths_info_result.matched >= 1

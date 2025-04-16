@@ -1,0 +1,17 @@
+---
+  # Check whether grsecurity is already configured,
+  # since that fact will be used in multiple includes.
+- include_tasks: check_installation.yml
+
+  # Install the grsec kernel prior to running unattended-upgrades to avoid
+  # reboots
+- include_tasks: from_fpf_repo_install_grsec.yml
+  tags:
+    - grsec
+
+- include_tasks: clean_packages.yml
+
+- include_tasks: apply_grsec_lock.yml
+  tags:
+    - reboot
+    - grsec

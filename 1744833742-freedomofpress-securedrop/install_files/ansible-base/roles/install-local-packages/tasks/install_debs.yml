@@ -1,0 +1,14 @@
+# This will look for packages in install_files/ansible-base,
+# so the "build" directory is relative to playbook, which is
+# why the parent dirs ("..") are necessary.
+- name: Copy locally built deb packages to server (Staging only).
+  copy:
+    src: ../../build/{{ securedrop_target_distribution }}/{{ item }}
+    dest: /root/
+  with_items: "{{ local_deb_packages }}"
+
+# Install all the packages we just copied using apt, which will resolve
+# dependencies for us. Use --reinstall to forcibly install them even if
+# the version is the same.
+- name: Install locally built deb packages (via apt).
+  command: apt-get install --reinstall --yes /root/{{ local_deb_packages | join(' /root/') }}

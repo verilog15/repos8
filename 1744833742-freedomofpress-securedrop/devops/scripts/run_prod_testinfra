@@ -1,0 +1,32 @@
+#!/bin/bash
+#
+# Script to run testinfra tests against a production SecureDrop instance. 
+# Must be run on an Admin Workstation after './securedrop-admin tailsconfig'
+# has completed successfully.
+#
+
+set -e
+set -o pipefail
+
+function cleanup {
+    deactivate
+    echo "--------"
+    echo "Verification complete - to restore the default workstation environment, remove ~/Persistent/securedrop/admin/.venv3 and run 'cd ~/Persistent/securedrop && ./securedrop-admin setup'"
+}
+trap cleanup EXIT
+
+
+# Are we in Tails?
+if [ -f "/home/amnesia/Persistent/.securedrop/securedrop_init.py" ]
+then
+    echo "Tails workstation detected, continuing..."
+else
+    echo "This script should be run on a SecureDrop Admin Workstation!"
+    exit 1
+fi
+
+cd ~/Persistent/securedrop
+source admin/.venv3/bin/activate
+
+cd molecule/testinfra
+CI_SD_ENV=${TEST_ENV:-prod} SECUREDROP_TESTINFRA_TARGET_HOST=${TEST_ENV:-prod} py.test -v -n 2 --disable-warnings -m "not skip_in_prod"

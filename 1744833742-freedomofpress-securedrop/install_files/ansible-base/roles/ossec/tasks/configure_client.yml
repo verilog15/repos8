@@ -1,0 +1,15 @@
+---
+- name: Install securedrop-ossec-agent package.
+  apt:
+    name: securedrop-ossec-agent
+    state: present
+  when: not install_local_packages
+  tags:
+    - apt
+
+- name: Enable the OSSEC service
+  systemd:
+    name: ossec
+    daemon_reload: yes
+    enabled: yes
+    masked: no

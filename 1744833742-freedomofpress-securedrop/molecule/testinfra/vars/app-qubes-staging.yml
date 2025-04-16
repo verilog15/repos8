@@ -1,0 +1,57 @@
+---
+# Testinfra vars file for app-staigng.
+wanted_apache_headers:
+  X-Content-Type-Options: nosniff
+  Content-Security-Policy: "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; frame-ancestors 'none';"
+  Cross-Origin-Opener-Policy: "same-origin"
+  Cross-Origin-Embedder-Policy: "same-origin"
+  Cross-Origin-Resource-Policy: "same-origin"
+
+
+securedrop_venv: /opt/venvs/securedrop-app-code
+securedrop_venv_bin: "{{ securedrop_venv }}/bin"
+securedrop_venv_site_packages: "{{ securedrop_venv }}/lib/python3.8/site-packages"
+securedrop_code: /var/www/securedrop
+securedrop_data: /var/lib/securedrop
+securedrop_user: www-data
+
+app_hostname: app-staging
+monitor_hostname: mon-staging
+
+apache_listening_address: 127.0.0.1
+apache_source_log: /var/log/apache2/source-error.log
+apache_allow_from: 127.0.0.1
+
+dns_server:
+  - 8.8.8.8
+  - 8.8.4.4
+mon_ip: 10.137.0.51
+app_ip: 10.137.0.50
+
+pip_deps:
+  - name: 'Flask'
+    version: '2.0.3'
+
+tor_services:
+  - name: journalistv3
+    ports:
+      - "80"
+    authenticated: yes
+    version: 3
+
+  - name: sourcev3
+    ports:
+      - "80"
+    authenticated: no
+    version: 3
+
+# Staging permits presence of "source-error.log".
+allowed_apache_logfiles:
+  - /var/log/apache2/access.log
+  - /var/log/apache2/error.log
+  - /var/log/apache2/journalist-access.log
+  - /var/log/apache2/journalist-error.log
+  - /var/log/apache2/other_vhosts_access.log
+  - /var/log/apache2/source-error.log
+
+fpf_apt_repo_url: "https://apt-test.freedom.press"

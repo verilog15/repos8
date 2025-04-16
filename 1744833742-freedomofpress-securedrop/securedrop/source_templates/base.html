@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="{{ g.localeinfo.language_tag }}" dir="{{ g.localeinfo.text_direction }}">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  {% if g.organization_name == "SecureDrop" %}
+  <title>{% block tab_title required %}{% endblock %} | {{ g.organization_name }} | {{ gettext('Protecting Journalists and Sources') }}</title>
+  {% else %}
+  <title>{{ self.tab_title() }} | {{ g.organization_name }} | {{ gettext('SecureDrop') }}</title>
+  {% endif %}
+
+  <link rel="stylesheet" href="/static/css/source.css">
+  <link rel="icon" type="image/png" href="/static/i/favicon.png">
+  {% block extrahead %}{% endblock %}
+</head>
+
+<body id="source{{ request.path.replace('/', '-') }}">
+  <div class="content">
+      <header>
+        {% if get_flashed_messages() %}
+        <a href="#flashed">{{ gettext('Skip to notification') }}</a>
+        {% endif %}
+        <a href="#main">{{ gettext('Skip to main content') }}</a>
+        {% block header %}
+        <h1><a aria-label="{% if is_user_logged_in %}{{ gettext('Return to Submission Page') }}{% else %}{{ gettext('Return to Home Page') }}{% endif %}"  href="{% if is_user_logged_in %}{{ url_for('main.lookup') }}{% else %}{{ url_for('main.index') }}{% endif %}">
+          <img src="{{ g.logo }}" alt="{{ g.organization_name }} logo">
+        </a></h1>
+        {% include 'locales.html' %}
+        {% endblock %}
+      </header>
+
+      <main id="main" tabindex="-1">
+        {% if g.show_offline_message %}
+        <section>
+          <h2>{{ gettext("We're sorry, our SecureDrop is currently offline.") }}</h2>
+          <p>{{ gettext("Please try again later. Check our website for more information.") }}</p>
+        </section>
+        {% else %}
+
+        {% if is_user_logged_in %}
+        <nav>
+          <form id="logout" action="{{ url_for('main.logout') }}" method="post">
+            <input name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+            <button id="btn-logout" type="submit" aria-label="{{ gettext('Log Out') }}">{{ gettext('LOG OUT') }}</button>
+          </form>
+        </nav>
+        {% endif %}
+
+        {% endif %}
+
+        {% block body %}{% endblock %}
+      </main>
+    </div>
+
+    {% block footer %}
+    {% include 'footer.html' %}
+    {% endblock %}
+</body>
+
+</html>

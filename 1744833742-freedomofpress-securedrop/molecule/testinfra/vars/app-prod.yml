@@ -1,0 +1,17 @@
+---
+mon_ip: 10.0.1.5
+
+tor_services:
+  - sshv3
+  - sourcev3
+  - journalistv3
+
+# No source-error.log allowed in prod
+allowed_apache_logfiles:
+  - /var/log/apache2/access.log
+  - /var/log/apache2/error.log
+  - /var/log/apache2/journalist-access.log
+  - /var/log/apache2/journalist-error.log
+  - /var/log/apache2/other_vhosts_access.log
+
+fpf_apt_repo_url: "https://apt.freedom.press"

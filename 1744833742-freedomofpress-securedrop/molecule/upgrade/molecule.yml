@@ -1,0 +1,38 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: vagrant
+  provider:
+    name: libvirt
+lint: |
+  yamllint
+
+platforms:
+  - name: apt-local
+    box: bento/ubuntu-20.04
+    raw_config_args:
+      - "cpu_mode = 'host-passthrough'"
+      - "video_type = 'virtio'"
+    instance_raw_config_args:
+      - "vm.synced_folder './', '/vagrant', disabled: true"
+      - "vm.network 'private_network', ip: '10.0.1.7'"
+      - "ssh.insert_key = false"
+    memory: 1024
+    private_ip: 10.0.1.7
+    groups:
+      - aptservers
+
+provisioner:
+  name: ansible
+  lint: |
+    ansible-lint
+  env:
+    ANSIBLE_CONFIG: ../../install_files/ansible-base/ansible.cfg
+
+scenario:
+  name: upgrade
+verifier:
+  name: testinfra
+  lint: |
+    name: flake8

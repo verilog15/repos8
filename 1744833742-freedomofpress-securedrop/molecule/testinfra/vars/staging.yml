@@ -1,0 +1,253 @@
+---
+# Testinfra vars file for app-staigng.
+wanted_apache_headers:
+  X-Content-Type-Options: nosniff
+  Content-Security-Policy: "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; frame-ancestors 'none';"
+  Cross-Origin-Opener-Policy: "same-origin"
+  Cross-Origin-Embedder-Policy: "same-origin"
+  Cross-Origin-Resource-Policy: "same-origin"
+
+securedrop_venv: /opt/venvs/securedrop-app-code
+securedrop_venv_bin: /opt/venvs/securedrop-app-code/bin
+securedrop_venv_site_packages: /opt/venvs/securedrop-app-code/lib/python{}/site-packages
+securedrop_code: /var/www/securedrop
+securedrop_data: /var/lib/securedrop
+securedrop_user: www-data
+securedrop_code_owner: root
+admin_user: vagrant
+
+app_hostname: app-staging
+monitor_hostname: mon-staging
+
+apache_listening_address: 127.0.0.1
+apache_source_log: /var/log/apache2/source-error.log
+apache_allow_from: 127.0.0.1
+
+dns_server:
+  - 8.8.8.8
+  - 8.8.4.4
+mon_ip: 10.0.1.3
+app_ip: 10.0.1.2
+
+pip_deps:
+  - name: 'Flask'
+    version: '2.0.3'
+
+tor_services:
+  - name: journalistv3
+    ports:
+      - "80"
+    authenticated: yes
+    version: 3
+
+  - name: sourcev3
+    ports:
+      - "80"
+    authenticated: no
+    version: 3
+
+# Staging permits presence of "source-error.log".
+allowed_apache_logfiles:
+  - /var/log/apache2/access.log
+  - /var/log/apache2/error.log
+  - /var/log/apache2/journalist-access.log
+  - /var/log/apache2/journalist-error.log
+  - /var/log/apache2/other_vhosts_access.log
+  - /var/log/apache2/source-error.log
+
+# Postfix is disabled in staging.
+postfix_enabled: False
+
+# But it does get configured.
+sasl_username: "test"
+sasl_domain: "ossec.test"
+sasl_password: "password123"
+
+# Log events for OSSEC alerts we suppress
+log_events_without_ossec_alerts:
+  # Check that using an overloaded guard does not produce an OSSEC alert
+  - name: test_overloaded_tor_guard_does_not_produce_alert
+    alert: >
+      Aug 16 21:54:44 app-staging Tor[26695]: [warn] Your Guard
+      <name> (<fingerprint>) is failing a very large amount of
+      circuits. Most likely this means the Tor network is
+      overloaded, but it could also mean an attack against you
+      or potentially the guard itself.
+
+  # Check that OSSEC keep alive messages sent to the OSSEC manager
+  # do not produce OSSEC alerts.
+  #
+  # For more information see:
+  # https://github.com/ossec/ossec-hids/issues/466
+  # http://ossec-docs.readthedocs.io/en/latest/faq/alerts.html
+  #
+  # Example alert is from:
+  # https://groups.google.com/forum/#!msg/ossec-list/dE3klm84JMU/kGZkRdSl3ZkJ
+  - name: test_ossec_keep_alive_mark_does_not_produce_alert
+    alert: >
+      Dec 02 09:48:40 app-staging ossec-keepalive: --MARK--:
+      &pQSW__BPa5S?%tyDTJ3-iCG2lz2dU))r(F%6tjp8wqpf=]IKFT%ND2k
+      P]ua/W)3-6'eHduX$;$Axqq7Vr.dVZ1SUDSaH)4xTXCIieaEKv47LD-b
+      U)SXMnXO/jPGKn3.!NGBR_5]jD2UoSV9)h%z8G%7.xhI;s)267.rV214
+      O@t2#w)Z(k'UQp9]MyDERrOrG[-,e?iS@B3Rg/kGiR[g6mc0K)/]S]0'
+      +?+'/.[r$fqBR^7iAjoPv4j6SWjeRsLGr%$3#p+buf&u_RC3i/mE3vS3*
+      jp&B1qSJM431TmEg,YJ][ge;6-dJI69?-TB?!BI4?Uza63V3vMY3ake6a
+      hj-%A-m_5lgab!OVR,!pR+;L]eLgilU
+
+  # Override and suppress fwupd-specific errors under Ubuntu Focal
+  - name: test_ossec_fwupd_fuplugin_uefi_does_not_produce_alert
+    alert: >
+      Mar  1 13:22:53 app fwupd[133921]: 13:22:53:0883 FuPluginUefi
+      Error opening directory â€œ/sys/firmware/efi/esrt/entriesâ€�: No such file or directory
+    level: "0"
+    rule_id: "100111"
+
+  - name: test_ossec_fwupd_fuengine_does_not_produce_alert
+    alert: >
+      Mar  1 13:22:53 mon fwupd[133921]: 13:22:53:0576 FuEngine
+      Failed to load SMBIOS: invalid DMI data size, got 2527 bytes, expected 2745
+    level: "0"
+    rule_id: "100112"
+
+  - name: test_ossec_fwupd_udisks2_does_not_produce_alert
+    alert: >
+      Aug 10 14:30:51 mon fwupd[134620]: 14:30:51:0528 FuPluginLinuxSwap    could
+      not parse /proc/swaps: failed to call
+      org.freedesktop.UDisks2.Manager.GetBlockDevices(): The name
+      org.freedesktop.UDisks2 was not provided by any .service files
+    level: "0"
+    rule_id: "100113"
+
+  - name: test_ossec_fwupd_chassis_type_does_not_produce_alert
+    alert: >
+      Sep 18 13:32:22 mon fwupd[134454]: 13:32:22:0632 FuEngine             failed
+      to get chassis type: no structure with type 03
+    level: "0"
+    rule_id: "100114"
+
+  # #6866
+  - name: NameError_hasattr_does_not_produce_alert
+    alert: >
+      NameError: name 'hasattr' is not defined
+    level: "0"
+    rule_id: "199996"
+
+  # #7491
+  - name: Update_notifier_download_failed_text_no_alert
+    alert: >
+        Download data for packages that failed at package install time
+    level: "0"
+    rule_id: "199994"
+
+  # #7491
+  - name: apt_news_warning_text_no_alert
+    alert: >
+        Warning: W:Download is performed unsandboxed as root as file
+    level: "0"
+    rule_id: "199995"
+
+  # OSSEC should not alert when "manage.py check-disconnected-{db,fs}-
+  # submissions" has logged that there are no disconnected submissions.
+  - name: test_no_disconnected_db_submissions_produces_alert
+    alert: >
+      ossec: output: 'cat /var/lib/securedrop/disconnected_db_submissions.txt':
+      No problems were found. All submissions' files are present.
+    level: "1"
+    rule_id: "400800"
+  - name: test_disconnected_fs_submissions_produces_alert
+    alert: >
+      ossec: output: 'cat /var/lib/securedrop/disconnected_fs_submissions.txt':
+      No unexpected files were found in the store.
+    level: "1"
+    rule_id: "400801"
+
+# Log events we expect an OSSEC alert to occur for
+log_events_with_ossec_alerts:
+  # Check that a denied RWX mmaping would produce an OSSEC alert
+  - name: test_grsec_denied_rwx_mapping_produces_alert
+    alert: >
+      Feb 10 23:34:40 app kernel: [  124.188641] grsec: denied
+      RWX mmap of <anonymous mapping> by /usr/sbin/apache2
+      [apache2:1328] uid/euid:33/33 gid/egid:33/33, parent
+      /usr/sbin/apache2[apache2:1309] uid/euid:0/0 gid/egid:0/0
+    level: "7" # Level 7 alert should be triggered by rule 100101
+    rule_id: "100101"
+
+  # When Ansible playbooks are run, an informative alert should be triggered
+  - name: test_ansible_playbook_triggers_alert
+    alert: >
+      Jul 22 17:06:41 app ansible-apt_key: Invoked with file=None
+      keyserver=None url=None data=-----BEGIN PGP PUBLIC KEY BLOCK
+      -----#012Version: GnuPG
+      v1#012#012mQENBEqg7GsBCACsef8koRT8UyZxiv1Irke5nVpte54TDtTl1
+      za1tOKfthmHbs2I#0124DHWG3qrwGayw+6yb5mMFe0h9Ap9IbilA5a1IdRs
+      dDgViyQQ3kvdfoavFHRxvGON#012tknIyk5Goa36GMBl84gQceRs/4Zx3kx
+      qCV+JYXE9CmdkpkVrh2K3j5+ysDWfD/kO#012dTzwu3WHaAwL8d5MJAGQn2
+      i6bTw4UHytrYemS1DdG/0EThCCyAnPmmb8iBkZlSW8#0126MzVqTrN37yvY
+      WTXk6MwKH50twaX5hzZAlSh9eqRjZLq51DDomO7EumXP90rS5mT#012QrS+
+      wiYfGQttoZfbh3wl5ZjejgEjx+qrnOH7ABEBAAG0JmRlYi50b3Jwcm9qZWN
+      0#012Lm9yZyBhcmNoaXZlIHNpZ25pbmcga2V5iEYEEBECAAYFAkqqojIACg
+      kQ61qJaiiY#012i/WmOgCfTyf3NJ7wHTBckwAeE4MSt5ZtXVsAn0XDq8PWW
+      nk4nK6TlevqK/VoWItF#012iEYEEBECAAYFAkqsYDUACgkQO50JPzGwl0vo
+      JwCcCSokiJSNY+yIr3nBPN/LJldb#012xekAmwfU60GeaWFwz7hqwVFL23x
+      eTpyniEYEEBECAAYFAkt9ndgACgkQYhWWT1sX#012KrI5TACfcBPbsaPA1A
+      UVVXXPv0KeWFYgVaIAoMr3jwd1NYVD6Te3D+yJhGzzCD6P#012iEYEEBECA
+      AYFAkt+li8ACgkQTlMAGaGhvAU4FwCfX3H4Ggm/x0yIAvmt4CW8AP9F#012
+      5D8AoKapuwbjsGncT3UdNFiHminAaq1tiEYEEBECAAYFAky6mjsACgkQhfc
+      mMSeh#012yJpL+gCggxs4C5o+Oznk7WmFrPQ3lbnfDKIAni4p20aRuwx6QW
+      GH8holjzTSmm5F#012iEYEEBECAAYFAlMI0FEACgkQhEMxewZV94DLagCcD
+      G5SR00+00VHzBVE6fDg027e#012N2sAnjNLOYbRSBxBnELUDKC7Vjaz/sAM
+      iEwEExECAAwFAkqg7nQFgwll/3cACgkQ#0123nqvbpTAnH+GJA
+    level: "13"
+    rule_id: "400001"
+
+  # Override and Log (as to not send email of messages pertaining to pssec
+  # server and agent starting up after each reboot.
+  - name: test_ossec_server_started_does_not_produce_email
+    alert: >
+      ossec: Ossec started.
+    level: "1"
+    rule_id: "400502"
+
+  - name: test_ossec_agent_started_does_not_produce_email
+    alert: >
+      ossec: Agent started
+    level: "1"
+    rule_id: "400503"
+
+  - name: test_ossec_server_apache_error_log_alert
+    alert: >
+      [Fri Apr 12 14:39:25.596318 2019] [wsgi:error]
+      [pid 1480:tid 4201987876608] ERROR:flask.app:Login for 'user' failed:
+      invalid username 'user'
+    level: "7"
+    rule_id: "400700"
+
+  - name: test_ossec_server_test_notification_alert
+    alert: >
+      [Fri Apr 12 15:45:05.310796 2019] [wsgi:error]
+      [pid 1479:tid 4201988093696] ERROR:flask.app:This is a test OSSEC alert
+    level: "7"
+    rule_id: "400700"
+
+  # OSSEC should alert when "manage.py check-disconnected-{db,fs}-submissions"
+  # has logged that there are disconnected submissions.
+  - name: test_disconnected_db_submissions_produces_alert
+    alert: >
+      ossec: output: 'cat /var/lib/securedrop/disconnected_db_submissions.txt':
+      There are submissions in the database with no corresponding files. Run
+      "manage.py list-disconnected-db-submissions" for details.
+    level: "1"
+    rule_id: "400800"
+  - name: test_disconnected_fs_submissions_produces_alert
+    alert: >
+      ossec: output: 'cat /var/lib/securedrop/disconnected_fs_submissions.txt':
+      There are files in the submission area with no corresponding records in
+      the database. Run "manage.py list-disconnected-fs-submissions" for
+      details.
+    level: "1"
+    rule_id: "400801"
+
+fpf_apt_repo_url: "https://apt-test.freedom.press"
+
+daily_reboot_time: "4"

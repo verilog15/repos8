@@ -1,0 +1,8 @@
+---
+extends: relaxed
+rules:
+  line-length:
+    max: 220
+    level: warning
+
+ignore-from-file: .gitignore

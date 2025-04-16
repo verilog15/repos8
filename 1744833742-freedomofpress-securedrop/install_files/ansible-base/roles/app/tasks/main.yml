@@ -1,0 +1,15 @@
+---
+- include_tasks: app_install_fpf_deb_pkgs.yml
+  when: securedrop_app_install_from_repo
+
+- include_tasks: initialize_securedrop_app.yml
+
+- include_tasks: copy_tor_url_info_to_app_dir.yml
+
+# If HTTPS is enabled, certs must land before Apache vhost configs
+# are written, otherwise the Apache enmod tasks will fail.
+- include_tasks: copy_ssl_certs.yml
+  when:
+    - securedrop_app_https_on_source_interface
+
+- include_tasks: install_and_harden_apache.yml

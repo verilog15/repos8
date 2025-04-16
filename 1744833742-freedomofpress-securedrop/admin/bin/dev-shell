@@ -1,0 +1,51 @@
+#!/bin/bash
+# shellcheck disable=SC2086,SC1090
+# we ignore SC2086 because ${DOCKER_BUILD_ARGUMENTS:-} is intended to
+# be evaluated into multiple strings, not a single argument.
+# we ignore SC1090 because "source" is validated independently
+
+set -euo pipefail
+
+TOPLEVEL=$(git rev-parse --show-toplevel)
+source "${BASH_SOURCE%/*}/../../devops/scripts/ticker"
+
+DOCKER_RUN_ARGUMENTS="${DOCKER_RUN_ARGUMENTS:-}"
+
+# Pass -it if we're a tty
+if test -t 0; then
+    DOCKER_RUN_ARGUMENTS="${DOCKER_RUN_ARGUMENTS} -it"
+fi
+
+function docker_image() {
+    local out
+    out="$(mktemp)"
+    cd "${TOPLEVEL}"
+    if ! docker build \
+           --build-arg=USER_ID="$(id -u)" \
+           --build-arg=USER_NAME="${USER:-root}" \
+           ${DOCKER_BUILD_ARGUMENTS:-} -t securedrop-admin -f admin/Dockerfile . >& "$out" ; then
+        cat "$out"
+        status=1
+    else
+        status=0
+    fi
+    return $status
+}
+
+function docker_run() {
+    if [ -z "${CI-}" ]
+    then
+        docker run \
+            --rm \
+            --user "${USER:-root}" \
+            --volume "${TOPLEVEL}:/sd-root:Z" \
+            --workdir "/sd-root/admin" \
+            ${DOCKER_RUN_ARGUMENTS} securedrop-admin "$@"
+    else
+        docker run --rm ${DOCKER_RUN_ARGUMENTS} securedrop-admin "$@"
+    fi
+
+}
+
+docker_image
+docker_run "$@"
