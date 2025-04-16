@@ -1,0 +1,182 @@
+name: xla-test
+on:
+  workflow_call:
+    inputs:
+      dev-image:
+        required: true
+        type: string
+        description: Base image for builds
+      runner:
+        required: false
+        type: string
+        description: Runner type for the test
+        default: linux.12xlarge
+      collect-coverage:
+        required: false
+        type: boolean
+        description: Set to true to collect coverage information
+        default: false
+      timeout-minutes:
+        required: false
+        type: number
+        default: 270
+        description: |
+          Set the maximum (in minutes) how long the workflow should take to finish
+            timeout-minutes:
+      install-cuda-plugin:
+        required: false
+        type: boolean
+        default: false
+        description: Whether to install CUDA plugin package
+      torch-commit:
+          required: true
+          type: string
+          description: torch-commit
+
+    secrets:
+      gcloud-service-key:
+        required: true
+        description: Secret to access Bazel build cache
+jobs:
+  test:
+    runs-on: ${{ inputs.runner }}
+    container:
+      image: ${{ inputs.dev-image }}
+      options: "${{ inputs.install-cuda-plugin && '--gpus all' || '' }} --shm-size 16g"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Use readable strings as they define the workflow titles.
+          - run_benchmark_tests: 'benchmark_tests'
+          - run_python_tests: 'python_tests'
+            run_xla_op_tests1: 'xla_op1'
+          - run_python_tests: 'python_tests'
+            run_xla_op_tests2: 'xla_op2'
+          - run_python_tests: 'python_tests'
+            run_xla_op_tests3: 'xla_op3'
+          - run_python_tests: 'python_tests'
+            run_torch_mp_op_tests: 'torch_mp_op'
+          - run_cpp_tests: 'cpp_tests'
+            run_cpp_tests1: 'cpp_tests1'
+          - run_cpp_tests: 'cpp_tests'
+            run_cpp_tests2: 'cpp_tests2'
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+    env:
+      GCLOUD_SERVICE_KEY: ${{ secrets.gcloud-service-key }}
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/default_credentials.json
+      USE_COVERAGE: ${{ inputs.collect-coverage && '1' || '0' }}
+      RUN_BENCHMARK_TESTS: ${{ matrix.run_benchmark_tests }}
+      RUN_PYTHON_TESTS: ${{ matrix.run_python_tests }}
+      RUN_XLA_OP_TESTS1: ${{ matrix.run_xla_op_tests1 }}
+      RUN_XLA_OP_TESTS2: ${{ matrix.run_xla_op_tests2 }}
+      RUN_XLA_OP_TESTS3: ${{ matrix.run_xla_op_tests3 }}
+      RUN_TORCH_MP_OP_TESTS: ${{ matrix.run_torch_mp_op_tests }}
+      RUN_CPP_TESTS1: ${{ matrix.run_cpp_tests1 }}
+      RUN_CPP_TESTS2: ${{ matrix.run_cpp_tests2 }}
+      BAZEL_JOBS: 16
+      BAZEL_REMOTE_CACHE: 1
+    steps:
+      - name: Checkout actions
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/workflows/setup
+          path: .actions
+      - name: Setup
+        uses: ./.actions/.github/workflows/setup
+        with:
+          torch-commit: ${{ inputs.torch-commit }}
+          cuda: ${{ inputs.install-cuda-plugin && true || false }}
+          wheels-artifact: torch-xla-wheels
+          cuda-plugin-artifact: ${{ inputs.install-cuda-plugin && 'cuda-plugin' || null }}
+      - name: Fetch CPP test binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: cpp-test-bin
+          path: /tmp/test/bin
+        if: ${{ matrix.run_cpp_tests }}
+      # GitHub Actions doesn't preserve executable permissions
+      # https://github.com/actions/download-artifact?tab=readme-ov-file#permission-loss
+      - name: Set CPP test permissions
+        run: |
+          chmod +x /tmp/test/bin/*
+          ls -l /tmp/test/bin
+        if: ${{ matrix.run_cpp_tests }}
+      - name: Check GPU
+        run: nvidia-smi
+        if: ${{ inputs.install-cuda-plugin }}
+      - name: Install test deps
+        shell: bash
+        run: |
+          # TODO: Add these in setup.py
+          pip install fsspec
+          pip install rich
+      - name: Checkout PyTorch Repo
+        uses: actions/checkout@v4
+        with:
+          repository: pytorch/pytorch
+          path: pytorch
+          ref: ${{ inputs.torch-commit }}
+      - name: Checkout PyTorch/XLA Repo
+        uses: actions/checkout@v4
+        with:
+          path: pytorch/xla
+      - name: Extra CI deps
+        shell: bash
+        run: |
+          set -x
+
+          pip install expecttest unittest-xml-reporting
+
+          if [[ ! -z "$RUN_BENCHMARK_TESTS" ]]; then
+            pip install -r pytorch/xla/benchmarks/requirements.txt
+          fi
+      - name: Test
+        shell: bash
+        run: pytorch/xla/.github/scripts/run_tests.sh pytorch/ pytorch/xla/ $USE_COVERAGE
+      - name: Upload coverage results
+        if: ${{ inputs.collect-coverage }}
+        shell: bash
+        env:
+          CIRCLE_WORKFLOW_ID: ${{ github.run_id }}
+          CIRCLE_BUILD_NUM: ${{ github.run_number }}
+          BENCHMARK_TEST_NAME: ${{ env.RUN_BENCHMARK_TESTS }}
+          PYTHON_TEST_NAME: ${{ env.RUN_PYTHON_TESTS }}${{ env.RUN_XLA_OP_TESTS1 }}${{ env.RUN_XLA_OP_TESTS2 }}${{ env.RUN_XLA_OP_TESTS3 }}${{ env.RUN_TORCH_MP_OP_TESTS }}
+          CPP_TEST_NAME: ${{ env.RUN_CPP_TESTS1 }}${{ env.RUN_CPP_TESTS2 }}
+        run: |
+            # TODO(yeounoh) collect coverage report as needed.
+            if [ -n "${BENCHMARK_TEST_NAME}" ]; then
+                exit 0
+            fi
+            docker cp "${pid}":/home/jenkins/htmlcov "${GITHUB_WORKSPACE}"
+            if [ -n "${GPU_FLAG:-}" ]; then
+              if [ -n "${PYTHON_TEST_NAME}" ]; then
+                gsutil cp ${GITHUB_WORKSPACE}/htmlcov/lcov.info gs://ng3-metrics/ng3-pytorchxla-coverage/absolute/pytorchxla/${CIRCLE_WORKFLOW_ID}/gpu_python_coverage_${PYTHON_TEST_NAME}.out
+                gsutil cp ${GITHUB_WORKSPACE}/htmlcov/lcov.info gs://ng3-metrics/ng3-pytorchxla-coverage/incremental/pytorchxla/${CIRCLE_WORKFLOW_ID}/gpu_python_coverage_${PYTHON_TEST_NAME}.out
+              fi
+              if [ -n "${CPP_TEST_NAME}" ]; then
+                gsutil cp ${GITHUB_WORKSPACE}/htmlcov/cpp_lcov.info gs://ng3-metrics/ng3-pytorchxla-coverage/absolute/pytorchxla/${CIRCLE_WORKFLOW_ID}/gpu_cpp_coverage_${CPP_TEST_NAME}.out
+                gsutil cp ${GITHUB_WORKSPACE}/htmlcov/cpp_lcov.info gs://ng3-metrics/ng3-pytorchxla-coverage/incremental/pytorchxla/${CIRCLE_WORKFLOW_ID}/gpu_cpp_coverage_${CPP_TEST_NAME}.out
+              fi
+            else
+              if [ -n "${PYTHON_TEST_NAME}" ]; then
+                gsutil cp ${GITHUB_WORKSPACE}/htmlcov/lcov.info gs://ng3-metrics/ng3-pytorchxla-coverage/absolute/pytorchxla/${CIRCLE_WORKFLOW_ID}/cpu_python_coverage_${PYTHON_TEST_NAME}.out
+                gsutil cp ${GITHUB_WORKSPACE}/htmlcov/lcov.info gs://ng3-metrics/ng3-pytorchxla-coverage/incremental/pytorchxla/${CIRCLE_WORKFLOW_ID}/cpu_python_coverage_${PYTHON_TEST_NAME}.out
+              fi
+
+              if [ -n "${CPP_TEST_NAME}" ]; then
+                gsutil cp ${GITHUB_WORKSPACE}/htmlcov/cpp_lcov.info gs://ng3-metrics/ng3-pytorchxla-coverage/absolute/pytorchxla/${CIRCLE_WORKFLOW_ID}/cpu_cpp_coverage_${CPP_TEST_NAME}.out
+                gsutil cp ${GITHUB_WORKSPACE}/htmlcov/cpp_lcov.info gs://ng3-metrics/ng3-pytorchxla-coverage/incremental/pytorchxla/${CIRCLE_WORKFLOW_ID}/cpu_cpp_coverage_${CPP_TEST_NAME}.out
+              fi
+
+              if [ "${CPP_TEST_NAME}" == "cpp_tests1" ]; then
+                ABS_METADATA='{"host": "github", "project": "pytorchxla", "trace_type": "LCOV", "commit_id": '\"${GITHUB_SHA}\"', "ref": "HEAD", "source": "https://github.com/pytorch/xla", "owner": "cloud-tpu-pt-dev", "bug_component": "587012"}'
+                echo $ABS_METADATA > abs_metadata.json
+                gsutil cp abs_metadata.json gs://ng3-metrics/ng3-pytorchxla-coverage/absolute/pytorchxla/${CIRCLE_WORKFLOW_ID}/metadata.json
+
+                INC_METADATA='{"host": "github", "project": "pytorchxla", "trace_type": "LCOV", "patchset_num": 1, "change_id": '${CIRCLE_BUILD_NUM}', "owner": "cloud-tpu-pt-dev", "bug_component": "587012"}'
+                echo $INC_METADATA > inc_metadata.json
+                gsutil cp inc_metadata.json gs://ng3-metrics/ng3-pytorchxla-coverage/incremental/pytorchxla/${CIRCLE_WORKFLOW_ID}/metadata.json
+              fi
+            fi

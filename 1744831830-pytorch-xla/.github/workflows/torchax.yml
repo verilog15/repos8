@@ -1,0 +1,59 @@
+name: torchax
+on:
+  pull_request:
+    branches:
+      - master
+      - r[0-9]+.[0-9]+
+  push:
+    branches:
+      - master
+      - r[0-9]+.[0-9]+
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}-${{ github.event_name == 'workflow_dispatch' }}-${{ github.event_name == 'schedule' }}
+  cancel-in-progress: true
+
+jobs:
+  torchax-cpu:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10']
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            torchax
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        shell: bash
+        working-directory: torchax
+        run: |
+          pip install -r test-requirements.txt
+          pip install -e .[cpu]
+      - name: Run tests
+        working-directory: torchax
+        shell: bash
+        run: |
+          export JAX_PLATFORMS=cpu
+          pytest test/test_conv.py
+          pytest test/test_unbounded_dynamism.py
+          pytest test/test_interop.py
+          pytest test/test_ops.py
+          pytest test/test_context.py
+          pytest test/test_train.py
+          pytest test/test_mutations.py
+          # pytest test/test_tf_integration.py # TODO(8770)
+          pytest test/gemma/test_gemma.py
+          pytest test/llama/test_llama.py
+          pytest test/test_core_aten_ops.py
+          pytest test/test_functions.py
+          pytest test/test_libraries.py
+          pytest test/test_symbolic_shapes.py
+          pytest test/test_exports.py
+          XLA_FLAGS=--xla_force_host_platform_device_count=4 pytest -n 0 test_dist/
