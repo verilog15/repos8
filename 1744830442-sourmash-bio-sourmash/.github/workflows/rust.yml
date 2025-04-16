@@ -1,0 +1,251 @@
+name: Rust checks
+
+on:
+  push:
+    branches: [latest]
+  pull_request:
+  schedule:
+    - cron: "0 0 * * *" # daily
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Run cargo check
+        run: |
+          cargo check
+
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        build: [beta, stable, windows, macos]
+        include:
+          - build: macos
+            os: macos-latest
+            rust: stable
+            continue: false
+          - build: windows
+            os: windows-latest
+            rust: stable
+            continue: true
+          - build: beta
+            os: ubuntu-latest
+            rust: beta
+            continue: false
+          - build: stable
+            os: ubuntu-latest
+            rust: stable
+            continue: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: taiki-e/install-action@nextest
+
+      - name: Run tests
+        run: |
+          cargo nextest run
+
+  test_all_features:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-all-features
+
+      - name: Run tests for all feature combinations
+        run: cargo test-all-features --no-fail-fast --all
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: taiki-e/install-action@cargo-llvm-cov
+      - uses: taiki-e/install-action@nextest
+
+      - name: Collect coverage data
+        run: cargo llvm-cov nextest --all-features --lcov --output-path lcov.info
+
+      - name: Upload Rust coverage to codecov
+        uses: codecov/codecov-action@v3
+        with:
+          flags: rust
+          fail_ci_if_error: true
+          files: lcov.info
+
+  lints:
+    name: Lints
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        build: [beta, stable]
+        include:
+          - build: beta
+            rust: beta
+          - build: stable
+            rust: stable
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+          components: "clippy, rustfmt"
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Run cargo fmt
+        run: |
+          cargo fmt --all -- --check
+
+      - name: Run cargo clippy
+        run: |
+          cargo clippy --all -- -D warnings
+
+  wasm-pack:
+    name: Check if wasm-pack builds a valid package for the sourmash crate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          target: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install wasm-pack
+        run: "curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh"
+
+      - name: Prepare node for running tests
+        uses: actions/setup-node@v4
+        with:
+          node-version: 16
+          registry-url: https://registry.npmjs.org/
+
+      - name: run wasm tests
+        continue-on-error: true  ## TODO: remove this when tests works again...
+        run: wasm-pack test --node src/core -- --features 'niffler/wasm'
+
+      - name: run wasm-pack build
+        run: wasm-pack build src/core -d ../../pkg -- --features 'niffler/wasm'
+
+      - name: Prepare package for NPM publishing
+        working-directory: pkg
+        run: npm pack
+
+      - name: Publish to NPM
+        if: startsWith(github.ref, 'refs/tags/r')
+        working-directory: pkg
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          path: 'pkg/sourmash*.tgz'
+
+  publish:
+    name: Publish (on tags, dry-run otherwise)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Check semver
+        uses: obi1kenobi/cargo-semver-checks-action@v2
+        with:
+          crate-name: sourmash
+          version-tag-prefix: r
+          feature-group: default-features
+          features: branchwater
+
+      - name: Make sure we can publish the sourmash crate
+        run: |
+          cargo publish --dry-run --manifest-path src/core/Cargo.toml
+
+      # Login to crates.io on tags
+      - name: login to crates.io
+        if: startsWith(github.ref, 'refs/tags/r')
+        run: |
+          cargo login ${{ secrets.CRATES_IO_TOKEN }}
+
+      # Publish to crates.io on tags
+      - name: Publish to crates.io
+        if: startsWith(github.ref, 'refs/tags/r')
+        run: |
+          cargo publish --manifest-path src/core/Cargo.toml
+
+  minimum_rust_version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.74.0"
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: check if README matches MSRV defined here
+        run: grep '1.74.0' src/core/README.md
+
+      - name: Check if it builds properly
+        run: |
+          cargo build --all-features
+
+  check_cbindgen:
+    name: "Check if cbindgen runs cleanly for generating the C headers"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cbindgen@0.26.0
+
+      - run: make include/sourmash.h
+
+      - name: check if headers have the same content
+        run: |
+          git update-index --refresh
+          git diff
+          git diff-index --quiet HEAD -- include/sourmash.h || echo "::error file=include/sourmash.h::Header doesn't match committed file, did you forget to rerun cbindgen?"

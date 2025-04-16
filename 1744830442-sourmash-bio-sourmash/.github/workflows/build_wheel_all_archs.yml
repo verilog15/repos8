@@ -1,0 +1,87 @@
+name: maturin wheels
+permissions: write-all
+
+on:
+  pull_request:        # use for testing modifications to this action
+  push:
+    branches: [latest]
+    tags: v*
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *" # daily
+
+jobs:
+
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [aarch64]
+        #target: [aarch64, ppc64le]
+        #target: [aarch64, s390x, ppc64le]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist --find-interpreter --zig --strip
+          sccache: 'true'
+          manylinux: auto
+          container: 'off'
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-${{ matrix.target }}
+          path: dist
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          architecture: ${{ matrix.target }}
+
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: x64
+          args: --release --out dist --find-interpreter
+          sccache: 'true'
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-win64
+          path: dist
+
+  release:
+    name: Publish wheels
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [linux, windows]
+
+    steps:
+      - name: Fetch wheels from artifacts
+        id: fetch_artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: 'wheels/'
+
+      # if it matches a Python release tag, upload to github releases
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{steps.fetch_artifacts.outputs.download-path}}/wheel-*/*

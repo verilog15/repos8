@@ -1,0 +1,10 @@
+include LICENSE Makefile README.md requirements.txt
+include Cargo.toml
+include include/sourmash.h
+prune .eggs
+global-exclude *.rlib
+global-exclude *.orig
+global-exclude *.pyc
+global-exclude *.so
+prune tests/test-data
+global-exclude *.git

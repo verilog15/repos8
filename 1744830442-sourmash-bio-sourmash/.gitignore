@@ -1,0 +1,42 @@
+*~
+*.fa
+*.fastq.gz
+*.abundtrim
+*.keep
+*.pyc
+*.sig
+*.png
+*.labels.txt
+distances
+*.npy
+dist
+build
+sourmash.egg-info
+.ipynb_checkpoints
+.cache
+*.so
+.coverage
+.pytest_cache
+**/*.pyc
+.python-version
+src/sourmash/version.py
+*.DS_Store
+.tox
+src/sourmash/_lowlevel/*
+.env
+target/
+.eggs
+.asv
+pkg/
+wasm-pack.log
+.hypothesis
+
+# IDEs
+.vscode/
+
+# nix
+.direnv/
+result
+
+# pixi
+.pixi/

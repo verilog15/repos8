@@ -1,0 +1,36 @@
+name: Hypothesis tests
+
+on:
+  push:
+    branches: [latest]
+  pull_request:
+  schedule:
+    - cron: "0 0 * * *" # daily
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install tox
+
+      - name: Run Hypothesis tests
+        run: tox -e hypothesis,coverage
+
+      - name: Upload Python coverage to codecov
+        uses: codecov/codecov-action@v3
+        with:
+          flags: hypothesis-py
+          fail_ci_if_error: true
+          files: .tox/coverage.xml

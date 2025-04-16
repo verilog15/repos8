@@ -1,0 +1,11 @@
+# config file for codecov, https://app.codecov.io/gh/sourmash-bio/sourmash/
+
+# use path fixing to properly report code coverage on source code
+# per https://docs.codecov.io/docs/fixing-paths
+fixes:
+- "sourmash::src/sourmash"
+ignores:
+- "src/core/src/ffi"
+
+codecov: 
+ token: 66273971-681c-44a5-b93a-f60249a2a70c

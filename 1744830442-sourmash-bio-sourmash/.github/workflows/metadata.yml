@@ -1,0 +1,19 @@
+name: Metadata checks 
+
+on:
+  push:
+    branches: [latest]
+  pull_request:
+  schedule:
+    - cron: "0 0 * * *" # daily
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Trigger new archival in software heritage on new tags
+        if: startsWith(github.ref, 'refs/tags/')
+        run: curl https://archive.softwareheritage.org/api/1/origin/save/git/url/https://github.com/sourmash-bio/sourmash.git/
