@@ -1,0 +1,10 @@
+# Order is important. The last matching pattern has the most precedence
+
+/.cargo/                                                       @philippemnoel @rebasedming
+/.github/                                                      @philippemnoel @rebasedming
+/benchmarks/                                                   @philippemnoel @rebasedming
+/docker/                                                       @philippemnoel @rebasedming
+/docs/                                                         @rebasedming @eeeebbbbrrrr
+/pg_search/                                                    @rebasedming @eeeebbbbrrrr
+/tests/                                                        @rebasedming @eeeebbbbrrrr
+/tokenizers/                                                   @rebasedming @eeeebbbbrrrr

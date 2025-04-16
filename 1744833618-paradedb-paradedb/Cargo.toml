@@ -1,0 +1,35 @@
+[workspace]
+resolver = "2"
+members = ["pg_search", "tests", "tokenizers", "benchmarks"]
+
+[workspace.package]
+version = "0.15.16"
+edition = "2021"
+license = "AGPL-3.0"
+
+[profile.dev]
+panic = "unwind"
+
+[profile.release]
+lto = "fat"
+panic = "unwind"
+opt-level = 3
+codegen-units = 1
+
+[profile.prof]
+inherits = "release"
+debug = true
+lto = "thin"
+codegen-units = 32
+
+[workspace.dependencies]
+tantivy = { git = "https://github.com/paradedb/tantivy.git", package = "tantivy", rev = "5e99b796d5101c0d82d1aafc46da15d67d48fc3c", features = [
+  "quickwit",        # for sstable support
+  "stopwords",
+  "lz4-compression",
+], default-features = false }
+pgrx = "=0.13.0"
+pgrx-tests = "=0.13.0"
+
+[patch.crates-io]
+rust_icu_sys = { git = "https://github.com/google/rust_icu.git", rev = "53e98c8" }
