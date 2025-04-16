@@ -1,0 +1,69 @@
+<my-alert class="mt-3" type="primary" i18n *ngIf="pluginInstalled">
+  To load your new installed plugins or themes, refresh the page.
+</my-alert>
+
+<div class="result-and-search">
+  @if (!search) {
+    <div>
+      <my-global-icon iconName="trending" aria-hidden="true"></my-global-icon>
+
+      @if (isThemeSearch()) {
+        <ng-container i18n>Popular themes</ng-container>
+      } @else {
+        <ng-container i18n>Popular plugins</ng-container>
+      }
+    </div>
+  }
+
+  @if (search && !isSearching) {
+    <div>
+      <my-global-icon iconName="search"></my-global-icon>
+
+      <ng-container i18n>
+        {{ pagination.totalItems }} {pagination.totalItems, plural, =1 {result} other {results}} for "{{ search }}"
+      </ng-container>
+    </div>
+  }
+
+  <div class="search-bar">
+    <input type="text" (input)="onSearchChange($event)" i18n-placeholder placeholder="Search..." myAutofocus />
+  </div>
+</div>
+
+<div class="no-results" i18n *ngIf="pagination.totalItems === 0">
+  No results.
+</div>
+
+<div class="plugins" myInfiniteScroller (nearOfBottom)="onNearOfBottom()" [dataObservable]="onDataSubject.asObservable()">
+  <ng-container *ngFor="let plugin of plugins" >
+    <my-plugin-card [plugin]="plugin" [version]="plugin.latestVersion" [pluginType]="pluginType">
+      <div ngProjectAs="badges">
+        <span i18n *ngIf="plugin.installed" class="pt-badge badge-success">Installed</span>
+
+        <span
+          *ngIf="plugin.official" class="pt-badge badge-primary"
+          i18n i18n-title title="This plugin is developed by Framasoft, the not-for-profit that develops PeerTube"
+        >Official</span>
+
+        <span
+          *ngIf="plugin.recommended" class="pt-badge badge-primary"
+          i18n i18n-title title="This plugin is recommended by Framasoft, the not-for-profit that develops PeerTube"
+        >Recommended</span>
+      </div>
+
+      <div ngProjectAs="buttons">
+        <my-edit-button
+          *ngIf="plugin.installed === true && !isThemeSearch()" [ptRouterLink]="getShowRouterLink(plugin)"
+          label="Settings" i18n-label [responsiveLabel]="true"
+        ></my-edit-button>
+
+        <my-button
+          *ngIf="plugin.installed === false" (click)="install(plugin)"
+          [loading]="isInstalling(plugin)" label="Install" [responsiveLabel]="true"
+          icon="cloud-download" [attr.disabled]="isInstalling(plugin)"
+        ></my-button>
+      </div>
+
+    </my-plugin-card>
+  </ng-container>
+</div>

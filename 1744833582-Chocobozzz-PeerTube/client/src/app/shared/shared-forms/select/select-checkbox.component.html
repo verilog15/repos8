@@ -1,0 +1,22 @@
+<p-multiSelect
+  [inputId]="inputId()"
+
+  [options]="availableItems()"
+  [(ngModel)]="selectedItems"
+  (ngModelChange)="onModelChange()"
+
+  [placeholder]="placeholder()"
+
+  [showClear]="showClear()"
+  [showToggleAll]="showToggleAll()"
+
+  optionValue="id"
+
+  [selectedItemsLabel]="selectedItemsLabel()"
+
+  [virtualScroll]="virtualScroll()"
+  [virtualScrollItemSize]="virtualScrollItemSize()"
+
+  (onPanelHide)="panelHide.emit()"
+>
+</p-multiSelect>

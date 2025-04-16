@@ -1,0 +1,10 @@
+@use '_variables' as *;
+@use '_mixins' as *;
+
+a {
+  color: pvar(--fg);
+}
+
+my-delete-button {
+  max-width: 130px;
+}

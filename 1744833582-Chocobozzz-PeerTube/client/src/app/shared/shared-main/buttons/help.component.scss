@@ -1,0 +1,44 @@
+@use '_variables' as *;
+@use '_mixins' as *;
+
+.help-tooltip-button {
+  my-global-icon {
+    color: pvar(--fg-400);
+
+    @include global-icon-size(18px);
+  }
+}
+
+::ng-deep {
+  .help-popover {
+    --bs-popover-bg: #{pvar(--bg-secondary-450)};
+
+    border: 0;
+    min-width: 200px;
+    max-width: 300px;
+
+    .popover-body {
+      padding: 1rem;
+      border-radius: 14px;
+      color: pvar(--fg-200);
+
+      .help-title {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: pvar(--fg-450);
+
+        @include font-size(20px);
+      }
+
+      p {
+        margin-bottom: 0;
+      }
+
+      ul {
+        margin-bottom: 0;
+
+        @include padding-left(20px);
+      }
+    }
+  }
+}
