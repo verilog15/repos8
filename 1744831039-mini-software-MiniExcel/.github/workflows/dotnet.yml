@@ -1,0 +1,35 @@
+name: .NET
+
+on:
+  pull_request:
+  push:
+    branches:
+    - master
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET 8
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 8.0.x
+    - name: Setup .NET 9
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 9.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+      env:
+          VSTEST_CONNECTION_TIMEOUT: 9000
+    - name: Build
+      run: dotnet build --no-restore
+      env:
+          VSTEST_CONNECTION_TIMEOUT: 9000
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
+      env:
+          VSTEST_CONNECTION_TIMEOUT: 9000
