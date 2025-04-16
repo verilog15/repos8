@@ -1,0 +1,120 @@
+[package]
+name = "foxtrot"
+authors = ["Jan Hohenheim <jan@hohenheim.ch>"]
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bevy = { version = "0.15.3", features = ["wayland"] }
+bevy_enhanced_input = "0.9"
+
+# physics
+avian3d = "0.2.1"
+avian_pickup = "0.1.0"
+
+# character controller
+bevy-tnua = { version = "0.22.0", git = "https://github.com/idanarye/bevy-tnua", branch = "feature/opt-out-of-being-ground" }
+bevy-tnua-avian3d = { version = "0.3.1", git = "https://github.com/idanarye/bevy-tnua", branch = "feature/opt-out-of-being-ground" }
+
+# navigation
+bevy_landmass = { version = "0.9.0-dev", git = "https://github.com/andriyDev/landmass", branch = "main" }
+oxidized_navigation = { version = "0.12.0", features = ["avian"] }
+landmass_oxidized_navigation = { version = "0.3.0-dev", git = "https://github.com/andriyDev/landmass", branch = "main" }
+
+# dialogue
+bevy_yarnspinner = "0.4.0"
+bevy_yarnspinner_example_dialogue_view = "0.4.0"
+
+# TODO:
+# bevy_hanabi
+
+rand = "0.8.5"
+
+# Compile low-severity logs out of native builds for performance.
+log = { version = "0.4", features = [
+    "max_level_debug",
+    "release_max_level_warn",
+] }
+# Compile low-severity logs out of web builds for performance.
+tracing = { version = "0.1", features = [
+    "max_level_debug",
+    "release_max_level_warn",
+] }
+aalo = { version = "0.0.4", optional = true }
+
+[dependencies.bevy_trenchbroom]
+git = "https://github.com/noxmore/bevy_trenchbroom"
+branch = "main"
+features = ["avian", "client"]
+default-features = false
+
+[features]
+default = [
+    # Default to a native dev build.
+    "dev_native",
+]
+dev = [
+    # Improve compile times for dev builds by linking Bevy as a dynamic library.
+    "bevy/dynamic_linking",
+    "bevy/bevy_dev_tools",
+    "aalo",
+    # uncomment in 0.16
+    # "bevy/bevy_ui_debug",
+]
+dev_native = [
+    "dev",
+    # Enable asset hot reloading for native dev builds.
+    "bevy/file_watcher",
+    # Enable embedded asset hot reloading for native dev builds.
+    "bevy/embedded_watcher",
+    "oxidized_navigation/debug_draw",
+]
+
+
+[package.metadata.bevy_cli.release]
+# Disable debug functionality in release builds
+default_features = false
+
+[package.metadata.bevy_cli.web.dev]
+# Disable native-only debug functionality in web builds
+default_features = false
+features = ["dev"]
+
+
+[lints.clippy]
+# Bevy supplies arguments to systems via dependency injection, so it's natural for systems to
+# request more than 7 arguments, which would undesirably trigger this lint.
+too_many_arguments = "allow"
+# Queries may access many components, which would undesirably trigger this lint.
+type_complexity = "allow"
+# Make sure macros use their standard braces, such as `[]` for `bevy_ecs::children!`.
+nonstandard_macro_braces = "warn"
+
+
+# Compile with Performance Optimizations:
+# https://bevyengine.org/learn/quick-start/getting-started/setup/#compile-with-performance-optimizations
+
+# Enable a small amount of optimization in the dev profile.
+[profile.dev]
+opt-level = 1
+
+# Enable a large amount of optimization in the dev profile for dependencies.
+[profile.dev.package."*"]
+opt-level = 3
+
+# Remove expensive debug assertions due to <https://github.com/bevyengine/bevy/issues/14291>
+[profile.dev.package.wgpu-types]
+debug-assertions = false
+
+[patch.crates-io]
+oxidized_navigation = { git = "https://github.com/TheGrimsey/oxidized_navigation" }
+
+# This profile will be used for `bevy run web` automatically
+[profile.web-release]
+# Default to release profile values.
+inherits = "release"
+# Optimize with size in mind (also try "z", sometimes it is better).
+# Slightly slows compile times, great improvements to file size and runtime performance.
+opt-level = "s"
+# Strip all debugging information from the binary to slightly reduce file size.
+strip = "debuginfo"
